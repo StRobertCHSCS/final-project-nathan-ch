@@ -230,8 +230,8 @@ def enemy_bullet_and_player_death_by_bullets():
     elif enemy_bullet_timer % 105 == 0:
         enemy_lazer = []
     
-    if enemy_bullet_timer > 305 * counter:
-        counter += 1
+    if enemy_bullet_timer == 306 * counter:
+        counter += 1.5
 
 def enemy_movement_and_collision_with_player():
     global enemy, page, enemy_size_healthbar, enemy_bullet_timer, random_movement
