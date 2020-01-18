@@ -7,6 +7,7 @@ import arcade
 import os
 import math
 import time
+import random
  
 WIDTH = 700
 HEIGHT = 800
@@ -23,7 +24,9 @@ player_bullet_click = 20
  
 # enemy player
 enemy = []
+enemy_two = []
 enemy_bullet = []
+enemy_lazer = []
 enemy_bullet_timer = -140
 enemy_bullet_firerate = 50
 enemy_bullet_angle = 0
@@ -31,6 +34,11 @@ enemy_healthbar = 40
 enemy_color_healthbar = arcade.color.GREEN
 enemy_lives = 3
 enemy_size_healthbar = 40
+
+# Waves of enemies
+wave = 1
+random_movement = [[0, 0]]
+
  
 # Variable to record if certain keys are being pressed.
 key_pressed = [False] * 4
@@ -43,17 +51,21 @@ page = 3
  
 
 def level_one():
-    for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
-        enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
+    # for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
+    #     enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
+    pass
  
 def level_two():
-    for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
-        for enemy_y in range(int(HEIGHT/2 + 200), int(HEIGHT/2) + 800, 200):
-            enemy.append([enemy_x, enemy_y, 3])
+    global wave
+    if wave == 1:
+         for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
+            enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
  
  
 def level_three():
-    pass
+    for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
+        for enemy_y in range(int(HEIGHT/2 + 200), int(HEIGHT/2) + 800, 200):
+            enemy.append([enemy_x, enemy_y, 3])
  
  
 def level_boss():
@@ -192,16 +204,30 @@ def enemy_bullet_and_player_death_by_bullets():
 
  
 def enemy_movement_and_collision_with_player():
-    global enemy, page, enemy_size_healthbar
+    global enemy, page, enemy_size_healthbar, enemy_bullet_timer, random_movement
     # Enemy movement and Player hitbox
     for movement in range(len(enemy) - 1, -1, -1):
-        if 3 <= page <= 4:
-            enemy[movement][0] += 5
-            if enemy[movement][0] > WIDTH * 1.5:
-                enemy[movement][0] = -300
-            enemy[movement][1] -= 2
-            if enemy[movement][1] == -22:
+        # if page == 3:
+        #     enemy[movement][0] += 5
+        #     if enemy[movement][0] > WIDTH * 1.5:
+        #         enemy[movement][0] = -300
+        #     enemy[movement][1] -= 2
+        #     if enemy[movement][1] <= -22:
+        #         enemy[movement][1] = HEIGHT + (40/2 + 2)
+        # if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
+        #         enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
+        #     page = 0
+        if page == 4:
+            if enemy_bullet_timer % 50 == 0:
+                del random_movement[0]
+                random_movement.append([random.randint(-3, 3), random.randint(0, 3)])
+            enemy[movement][0] += random_movement[0][0]
+            if enemy[movement][0] > WIDTH + 40/2 or enemy[movement][0] < -40/2:
+                enemy[movement][0] = WIDTH/2
                 enemy[movement][1] = HEIGHT + (40/2 + 2)
+            enemy[movement][1] -= random_movement[0][1]
+            if enemy[movement][1] <= -22:
+                    enemy[movement][1] = HEIGHT + (40/2 + 2)
         if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
                 enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
             page = 0
@@ -271,13 +297,13 @@ level_one()
  
 def on_update(delta_time):
     global page, enemy
-    if len(enemy) == 0:
+    if len(enemy) == 0 and len(enemy_two) == 0:
         page += 1
         print(page)
-    if len(enemy) == 0 and page == 4:
+    if len(enemy) == 0 and len(enemy_two) == 0 and page == 4:
         reset()
         level_two()
-    elif len(enemy) == 0 and page == 6:
+    elif len(enemy) == 0 and len(enemy_two) == 0 and page == 6:
         reset()
         level_boss()
     if page >= 3:
@@ -363,7 +389,7 @@ def on_mouse_motion(x, y, dx, dy):
  
  
 def setup():
-    global player_texture, player_bullet_texture, enemy_texture, enemy_bullet_texture
+    global player_texture, player_bullet_texture, enemy_texture, enemy_bullet_texture, enemy_two_texture, enemy_lazer_charging, enemy_lazer_firing
     arcade.open_window(WIDTH, HEIGHT, "HYPERSPACE Python Arcade Edition")
     arcade.set_background_color(arcade.color.BLACK)
     arcade.schedule(on_update, 1/60)
@@ -382,6 +408,9 @@ def setup():
     player_bullet_texture = arcade.load_texture("images/Bullet.png")
     enemy_texture = arcade.load_texture("images/Enemy.png")
     enemy_bullet_texture = arcade.load_texture("images/Enemy Bullet.png")
+    enemy_two_texture = arcade.load_texture("images/Beamer.png")
+    enemy_laser_charging = arcade.load_texture("images/Laser Charging.png")
+    enemy_laser_firing = arcade.load_texture("images/Laser Firing.png")
  
     arcade.run()
  
