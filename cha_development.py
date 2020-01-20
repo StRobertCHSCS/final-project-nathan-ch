@@ -51,9 +51,9 @@ page = 3
  
 
 def level_one():
-    # for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
-    #     enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
-    pass
+    for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
+        enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
+    
  
 def level_two():
     global wave
@@ -207,16 +207,16 @@ def enemy_movement_and_collision_with_player():
     global enemy, page, enemy_size_healthbar, enemy_bullet_timer, random_movement
     # Enemy movement and Player hitbox
     for movement in range(len(enemy) - 1, -1, -1):
-        # if page == 3:
-        #     enemy[movement][0] += 5
-        #     if enemy[movement][0] > WIDTH * 1.5:
-        #         enemy[movement][0] = -300
-        #     enemy[movement][1] -= 2
-        #     if enemy[movement][1] <= -22:
-        #         enemy[movement][1] = HEIGHT + (40/2 + 2)
-        # if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
-        #         enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
-        #     page = 0
+        if page == 3:
+            enemy[movement][0] += 5
+            if enemy[movement][0] > WIDTH * 1.5:
+                enemy[movement][0] = -300
+            enemy[movement][1] -= 2
+            if enemy[movement][1] <= -22:
+                enemy[movement][1] = HEIGHT + (40/2 + 2)
+        if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
+                enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
+            page = 0
         if page == 4:
             if enemy_bullet_timer % 50 == 0:
                 del random_movement[0]
