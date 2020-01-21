@@ -27,6 +27,7 @@ enemy = []
 enemy_two = []
 enemy_bullet = []
 enemy_lazer = []
+enemy_lazer_charging = []
 enemy_bullet_timer = -140
 enemy_bullet_firerate = 50
 enemy_bullet_angle = 0
@@ -35,10 +36,11 @@ enemy_color_healthbar = arcade.color.GREEN
 enemy_lives = 3
 enemy_size_healthbar = 40
 
-# Waves of enemies
-wave = 1
-random_movement = [[0, 0]]
 
+random_movement = [[0, 0]]
+enemy_lazer_firerate = 50
+counter = 1
+laser_y = 0
  
 # Variable to record if certain keys are being pressed.
 key_pressed = [False] * 4
@@ -53,20 +55,17 @@ page = 3
 def level_one():
     for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
         enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
-    
  
 def level_two():
-    global wave
-    if wave == 1:
-         for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
-            enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
+    for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
+        enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
  
  
 def level_three():
-    for enemy_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
-        for enemy_y in range(int(HEIGHT/2 + 200), int(HEIGHT/2) + 800, 200):
-            enemy.append([enemy_x, enemy_y, 3])
- 
+    global enemy_bullet_timer
+    enemy_bullet_timer = -50
+    for enemy_two_x in range(int(WIDTH/3 - WIDTH/7), WIDTH, int(WIDTH/3)):
+        enemy_two.append([enemy_two_x, HEIGHT/2 * 1.75, 3])
  
 def level_boss():
     global enemy_lives, enemy_size_healthbar, enemy_bullet_firerate, player_x, player_y
@@ -160,7 +159,7 @@ def bullet_player_firerate():
  
  
 def enemy_hit():
-    global enemy, player_bullet, enemy_lives, enemy_healthbar, enemy_lives, enemy_size_healthbar, enemy_size_healthbar
+    global enemy, player_bullet, enemy_lives, enemy_healthbar, enemy_lives, enemy_size_healthbar, enemy_size_healthbar, enemy_two
     # Player bullet and Hitbox of enemies 
     for bullet_animation in range(len(player_bullet) - 1, -1, -1):
         for hit in range(len(enemy) - 1, -1, -1):
@@ -171,66 +170,105 @@ def enemy_hit():
                 enemy[hit][2] -= 1
                 if enemy[hit][2] == 0:
                     del enemy[hit]
+    
+        for hit_enemy in range(len(enemy_two) - 1, -1, -1):
+            if (enemy_two[hit_enemy][0] - enemy_size_healthbar/2 - 5 <= player_bullet[bullet_animation][0] <= enemy_two[hit_enemy][0] + enemy_size_healthbar/2 + 5 and 
+                enemy_two[hit_enemy][1] - 40/2 - 5 <= player_bullet[bullet_animation][1] <= enemy_two[hit_enemy][1] + 40/2 + 5):
+                del player_bullet[bullet_animation]
+                player_bullet.append([0, 826])
+                enemy_two[hit_enemy][2] -= 1
+                if enemy_two[hit_enemy][2] == 0:
+                    del enemy_two[hit_enemy]
+        
         player_bullet[bullet_animation][1] += 15
         if player_bullet[bullet_animation][1] > HEIGHT + 25: 
             del player_bullet[bullet_animation]
+        
  
  
 def enemy_bullet_and_player_death_by_bullets():
-    global enemy_bullet_timer, enemy_bullet_firerate, enemy_bullet, player_x, player_y, page, enemy, enemy_bullet_angle
+    global enemy_bullet_timer, enemy_bullet_firerate, enemy_bullet, player_x, player_y, page, enemy, enemy_bullet_angle, enemy_two, enemy_lazer, enemy_lazer_firerate, counter 
+    global enemy_lazer_charging, laser_y
     # Enemy bullet and Player death by bullets
     enemy_bullet_timer += 1
-    if enemy_bullet_timer % enemy_bullet_firerate == 0:
-        for i in range(len(enemy) - 1, -1, -1):
-            enemy_bullet.append([enemy[i][0], enemy[i][1]])
-    for e_bullet in range(len(enemy_bullet) - 1, -1, -1):
-        if (player_x - 40/2 - 10 <= enemy_bullet[e_bullet][0] <= player_x + 40/2 + 10 and
-                player_y - 40/2 - 10 <= enemy_bullet[e_bullet][1] <= player_y + 40/2 + 10):
-                page = 0
-        if 3 <= page <= 4:
-            enemy_bullet[e_bullet][1] -= 15
-            if enemy_bullet[e_bullet][1] < - 25:
-                del enemy_bullet[e_bullet]
-        elif page == 6:
-            for direction in range(len(enemy) - 1, -1, -1):
-                x_diff = enemy[direction][0] - player_x
-                y_diff = enemy[direction][1] - player_y
-                angle = math.atan2(y_diff, x_diff)
-                enemy_bullet_angle = math.degrees(angle) - 90
-                bullet_change_x = math.cos(angle) * 5
-                bullet_change_y = math.sin(angle) * 5
-                enemy_bullet[e_bullet][1] -= bullet_change_y
-                enemy_bullet[e_bullet][0] -= bullet_change_x
+    # if enemy_bullet_timer % enemy_bullet_firerate == 0:
+    #     for i in range(len(enemy) - 1, -1, -1):
+    #         enemy_bullet.append([enemy[i][0], enemy[i][1]])
+    # for e_bullet in range(len(enemy_bullet) - 1, -1, -1):
+    #     if (player_x - 40/2 - 10 <= enemy_bullet[e_bullet][0] <= player_x + 40/2 + 10 and
+    #             player_y - 40/2 - 10 <= enemy_bullet[e_bullet][1] <= player_y + 40/2 + 10):
+    #             page = 0
+    #     if 3 <= page <= 4:
+    #         enemy_bullet[e_bullet][1] -= 15
+    #         if enemy_bullet[e_bullet][1] < - 25:
+    #             del enemy_bullet[e_bullet]
+    #     elif page == 6:
+    #         for direction in range(len(enemy) - 1, -1, -1):
+    #             x_diff = enemy[direction][0] - player_x
+    #             y_diff = enemy[direction][1] - player_y
+    #             angle = math.atan2(y_diff, x_diff)
+    #             enemy_bullet_angle = math.degrees(angle) - 90
+    #             bullet_change_x = math.cos(angle) * 5
+    #             bullet_change_y = math.sin(angle) * 5
+    #             enemy_bullet[e_bullet][1] -= bullet_change_y
+    #             enemy_bullet[e_bullet][0] -= bullet_change_x
 
- 
+    if page == 5:
+        if enemy_bullet_timer % 100 == 0:
+            for i in range(len(enemy_two) - 1, -1, -1):
+                enemy_lazer_charging.append([enemy_two[i][0], enemy_two[i][1]])
+        if enemy_bullet_timer % 105 == 0:
+            enemy_lazer_charging = []        
+
+        if enemy_bullet_timer % 200 == 0:
+            for j in range(len(enemy_two) - 1, -1, -1):
+                enemy_lazer.append([enemy_two[j][0], enemy_two[j][1]])
+        if enemy_bullet_timer % 299 == 0:
+            enemy_lazer = []
+            laser_y = 0
+
+        if enemy_bullet_timer >= 299:
+            enemy_bullet_timer = -50
+
+        for enemy_two_lazer in range(len(enemy_lazer) - 1, -1, -1):
+            if (player_x - 40/2 - 10 <= enemy_lazer[enemy_two_lazer][0] <= player_x + 40/2 + 10 and
+                enemy_lazer[enemy_two_lazer][1] - 30 - laser_y <= player_y + 30 <= enemy_lazer[enemy_two_lazer][1]):
+                    page = 0
+
+# arcade.draw_xywh_rectangle_textured(enemy_lazer[enemy_lazer_draw][0] - 20, enemy_lazer[enemy_lazer_draw][1] - 30 - laser_y, 40, 0 + laser_y, enemy_laser_firing_texture)
 def enemy_movement_and_collision_with_player():
-    global enemy, page, enemy_size_healthbar, enemy_bullet_timer, random_movement
+    global enemy, page, enemy_size_healthbar, enemy_bullet_timer, random_movement, enemy_two
     # Enemy movement and Player hitbox
-    for movement in range(len(enemy) - 1, -1, -1):
-        if page == 3:
-            enemy[movement][0] += 5
-            if enemy[movement][0] > WIDTH * 1.5:
-                enemy[movement][0] = -300
-            enemy[movement][1] -= 2
-            if enemy[movement][1] <= -22:
-                enemy[movement][1] = HEIGHT + (40/2 + 2)
-        if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
-                enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
-            page = 0
-        if page == 4:
-            if enemy_bullet_timer % 50 == 0:
-                del random_movement[0]
-                random_movement.append([random.randint(-3, 3), random.randint(0, 3)])
-            enemy[movement][0] += random_movement[0][0]
-            if enemy[movement][0] > WIDTH + 40/2 or enemy[movement][0] < -40/2:
-                enemy[movement][0] = WIDTH/2
-                enemy[movement][1] = HEIGHT + (40/2 + 2)
-            enemy[movement][1] -= random_movement[0][1]
-            if enemy[movement][1] <= -22:
-                    enemy[movement][1] = HEIGHT + (40/2 + 2)
-        if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
-                enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
-            page = 0
+    # for movement in range(len(enemy) - 1, -1, -1):
+    #     if page == 3:
+    #         enemy[movement][0] += 5
+    #         if enemy[movement][0] > WIDTH * 1.5:
+    #             enemy[movement][0] = -300
+    #         enemy[movement][1] -= 2
+    #         if enemy[movement][1] <= -22:
+    #             enemy[movement][1] = HEIGHT + (40/2 + 2)
+    #     if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
+    #             enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
+    #         page = 0
+    #     elif page == 4:
+    #         if enemy_bullet_timer % 50 == 0:
+    #             del random_movement[0]
+    #             random_movement.append([random.randint(-3, 3), random.randint(0, 3)])
+    #         enemy[movement][0] += random_movement[0][0]
+    #         if enemy[movement][0] > WIDTH + 40/2 or enemy[movement][0] < -40/2:
+    #             enemy[movement][0] = WIDTH/2
+    #             enemy[movement][1] = HEIGHT + (40/2 + 2)
+    #         enemy[movement][1] -= random_movement[0][1]
+    #         if enemy[movement][1] <= -22:
+    #                 enemy[movement][1] = HEIGHT + (40/2 + 2)
+    #     if (enemy[movement][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy[movement][0] + enemy_size_healthbar/2 + 20 and
+    #             enemy[movement][1] - 40/2 - 20 <= player_y <= enemy[movement][1] + 40/2 + 20):
+    #         page = 0
+    if page == 5:
+        for movement_enemy_two in range(len(enemy_two) -1, -1, -1):
+            if (enemy_two[movement_enemy_two][0] - enemy_size_healthbar/2 - 20 <= player_x <= enemy_two[movement_enemy_two][0] + enemy_size_healthbar/2 + 20 and
+                    enemy_two[movement_enemy_two][1] - 40/2 - 20 <= player_y <= enemy_two[movement_enemy_two][1] + 40/2 + 20):
+                page = 0
  
  
 def dead_draw():
@@ -246,7 +284,7 @@ def home_page_draw():
     
  
 def enemy_player_and_healthbar_draw():
-    global enemy, enemy_healthbar, enemy_color_healthbar, enemy_lives, enemy_size_healthbar, enemy_texture
+    global enemy, enemy_healthbar, enemy_color_healthbar, enemy_lives, enemy_size_healthbar, enemy_texture, enemy_two, enemy_two_texture
     # Enemy player and Health bar
     for draw in range(len(enemy) - 1, -1, -1):
         scale = 1
@@ -262,18 +300,43 @@ def enemy_player_and_healthbar_draw():
             enemy_color_healthbar = arcade.color.GREEN
         enemy_healthbar = enemy_size_healthbar * enemy[draw][2]/enemy_lives
         arcade.draw_xywh_rectangle_filled(enemy[draw][0] - enemy_size_healthbar/2, enemy[draw][1] + 40/2 + 5, enemy_healthbar, 5, enemy_color_healthbar)
+
+    for enemy_two_draw in range(len(enemy_two) - 1, -1, -1):
+        scale = 1
+        arcade.draw_texture_rectangle(enemy_two[enemy_two_draw][0], enemy_two[enemy_two_draw][1], scale * enemy_two_texture.width, scale * enemy_two_texture.height, enemy_two_texture)
+ 
+        # arcade.draw_rectangle_filled(enemy[draw][0], enemy[draw][1], enemy_size_healthbar, 40, arcade.color.RED)
+        # arcade.draw_rectangle_outline(enemy[draw][0], enemy[draw][1], enemy_size_healthbar, 40, arcade.color.WHITE, 2)
+        if 1/3 * 100 < enemy_two[enemy_two_draw][2]/enemy_lives * 100 <= 2/3 * 100:
+            enemy_color_healthbar = arcade.color.YELLOW
+        elif enemy_two[enemy_two_draw][2]/enemy_lives * 100 <= 1/3 * 100:
+            enemy_color_healthbar = arcade.color.RED
+        else:
+            enemy_color_healthbar = arcade.color.GREEN
+        enemy_healthbar = enemy_size_healthbar * enemy_two[enemy_two_draw][2]/enemy_lives
+        arcade.draw_xywh_rectangle_filled(enemy_two[enemy_two_draw][0] - enemy_size_healthbar/2, enemy_two[enemy_two_draw][1] + 40/2 + 5, enemy_healthbar, 5, enemy_color_healthbar)
  
  
 def enemy_bullet_draw():
-    global enemy_bullet, enemy_bullet_angle, enemy_bullet_texture
+    global enemy_bullet, enemy_bullet_angle, enemy_bullet_texture, enemy_lazer, enemy_lazer_firing_texture, enemy_laser_charging_texture, enemy_lazer_charging
+    global laser_y, enemy_bullet_timer, counter
     # Enemy bullet
     for enemy_bullet_draw in range(len(enemy_bullet)):
         scale = 1
         arcade.draw_texture_rectangle(enemy_bullet[enemy_bullet_draw][0], enemy_bullet[enemy_bullet_draw][1] - 10, scale * enemy_bullet_texture.width, scale * enemy_bullet_texture.height, enemy_bullet_texture, enemy_bullet_angle)
         # arcade.draw_rectangle_filled(enemy_bullet[enemy_bullet_draw][0], enemy_bullet[enemy_bullet_draw][1] - 10, 10, 15, arcade.color.PURPLE, enemy_bullet_angle)
         # arcade.draw_rectangle_outline(enemy_bullet[enemy_bullet_draw][0], enemy_bullet[enemy_bullet_draw][1] - 10, 10, 15, arcade.color.WHITE, 2, enemy_bullet_angle)
-        
     
+    if page == 5:
+        if 200 <= enemy_bullet_timer <= 299:
+            laser_y += 7
+        
+        for enemy_lazer_draw in range(len(enemy_lazer)):
+            arcade.draw_xywh_rectangle_textured(enemy_lazer[enemy_lazer_draw][0] - 20, enemy_lazer[enemy_lazer_draw][1] - 30 - laser_y, 40, 0 + laser_y, enemy_laser_firing_texture)
+
+        for enemy_lazer_charging_draw in range(len(enemy_lazer_charging)):
+            arcade.draw_texture_rectangle(enemy_lazer_charging[enemy_lazer_charging_draw][0], enemy_lazer_charging[enemy_lazer_charging_draw][1] - 380, 4 * enemy_laser_charging_texture.width, 35 * enemy_laser_charging_texture.height, enemy_laser_charging_texture)
+
 def player_draw():
     global player_x, player_y, player_texture
     # player
@@ -293,8 +356,9 @@ def player_bullet_draw():
         # arcade.draw_rectangle_filled(player_bullet[bullet_draw][0], player_bullet[bullet_draw][1] + 10, 10, 15, arcade.color.BLUE)
         # arcade.draw_rectangle_outline(player_bullet[bullet_draw][0], player_bullet[bullet_draw][1] + 10, 10, 15, arcade.color.WHITE, 2)
  
-level_one()
- 
+
+level_three()
+page = 5
 def on_update(delta_time):
     global page, enemy
     if len(enemy) == 0 and len(enemy_two) == 0:
@@ -303,6 +367,9 @@ def on_update(delta_time):
     if len(enemy) == 0 and len(enemy_two) == 0 and page == 4:
         reset()
         level_two()
+    elif len(enemy) == 0 and len(enemy_two) == 0 and page == 5:
+        reset()
+        level_three()
     elif len(enemy) == 0 and len(enemy_two) == 0 and page == 6:
         reset()
         level_boss()
@@ -389,7 +456,7 @@ def on_mouse_motion(x, y, dx, dy):
  
  
 def setup():
-    global player_texture, player_bullet_texture, enemy_texture, enemy_bullet_texture, enemy_two_texture, enemy_lazer_charging, enemy_lazer_firing
+    global player_texture, player_bullet_texture, enemy_texture, enemy_bullet_texture, enemy_two_texture, enemy_laser_charging_texture, enemy_laser_firing_texture
     arcade.open_window(WIDTH, HEIGHT, "HYPERSPACE Python Arcade Edition")
     arcade.set_background_color(arcade.color.BLACK)
     arcade.schedule(on_update, 1/60)
@@ -409,8 +476,8 @@ def setup():
     enemy_texture = arcade.load_texture("images/Enemy.png")
     enemy_bullet_texture = arcade.load_texture("images/Enemy Bullet.png")
     enemy_two_texture = arcade.load_texture("images/Beamer.png")
-    enemy_laser_charging = arcade.load_texture("images/Laser Charging.png")
-    enemy_laser_firing = arcade.load_texture("images/Laser Firing.png")
+    enemy_laser_charging_texture = arcade.load_texture("images/Laser Charging.png")
+    enemy_laser_firing_texture = arcade.load_texture("images/Laser Firing.png")
  
     arcade.run()
  
