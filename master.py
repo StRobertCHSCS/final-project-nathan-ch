@@ -18,6 +18,9 @@ player_y = HEIGHT/2
  
 # bullets of player
 player_bullet = []
+player_rocket = []
+player_rocket_firerate = False
+player_rocket_timer = 0
 player_bullet_firerate = False
 player_bullet_timer = -2
 player_bullet_click = 20
@@ -79,6 +82,7 @@ def level_four():
         enemy.append([enemy_x, HEIGHT/2 * 1.75, 3])
     for enemy_two_x in range(310, 410, 99):
         enemy_two.append([enemy_two_x, HEIGHT - 50, 3])
+
 
 def level_boss():
     global enemy_lives, enemy_size_healthbar, enemy_bullet_firerate, player_x, player_y, boss
@@ -180,6 +184,7 @@ def bullet_player_firerate():
  
 def enemy_hit():
     global enemy, player_bullet, enemy_lives, enemy_healthbar, enemy_lives, enemy_size_healthbar, enemy_size_healthbar, enemy_two, score, combo
+    global player_rocket_firerate, player_rocket_timer
     # Player bullet and Hitbox of enemies 
     for bullet_animation in range(len(player_bullet) - 1, -1, -1):
         for hit in range(len(enemy) - 1, -1, -1):
@@ -190,7 +195,7 @@ def enemy_hit():
                 enemy[hit][2] -= 1
                 score += 5
                 combo += 1
-                if enemy[hit][2] == 0:
+                if enemy[hit][2] <= 0:
                     del enemy[hit]
                     score += 100
 
@@ -203,14 +208,46 @@ def enemy_hit():
                 enemy_two[hit_enemy][2] -= 1
                 score += 5
                 combo += 1
-                if enemy_two[hit_enemy][2] == 0:
+                if enemy_two[hit_enemy][2] <= 0:
                     del enemy_two[hit_enemy]
                     score += 100
 
         player_bullet[bullet_animation][1] += 15
         if player_bullet[bullet_animation][1] > HEIGHT + 25: 
             del player_bullet[bullet_animation]
+
+    # player rocket
+    if player_rocket_firerate == True:
+        player_rocket_timer += 1
+
+    if player_rocket_timer == 500:
+        player_rocket_firerate = False
+        player_rocket_timer = 0
+    
+    for rocket_animation in range(len(player_rocket) - 1, -1, -1):
+        for hit in range(len(enemy) - 1, -1, -1):
+            if (enemy[hit][0] - enemy_size_healthbar/2 - 5 <= player_rocket[rocket_animation][0] <= enemy[hit][0] + enemy_size_healthbar/2 + 5 and 
+                enemy[hit][1] - 40/2 - 5 <= player_rocket[rocket_animation][1] <= enemy[hit][1] + 40/2 + 5):
+                del player_rocket[rocket_animation]
+                player_rocket.append([0, 826])
+                enemy[hit][2] -= 3
+                if enemy[hit][2] <= 0:
+                    del enemy[hit]
+                    score += 100
+
+        for hit_enemy in range(len(enemy_two) - 1, -1, -1):
+            if (enemy_two[hit_enemy][0] - enemy_size_healthbar/2 - 5 <= player_rocket[rocket_animation][0] <= enemy_two[hit_enemy][0] + enemy_size_healthbar/2 + 5 and 
+                enemy_two[hit_enemy][1] - 40/2 - 5 <= player_rocket[rocket_animation][1] <= enemy_two[hit_enemy][1] + 40/2 + 5):
+                del player_rocket[rocket_animation]
+                player_rocket.append([0, 826])
+                enemy[hit_enemy][2] -= 3
+                if enemy_two[hit_enemy][2] <= 0:
+                    del enemy_two[hit_enemy]
+                    score += 100
         
+        player_rocket[rocket_animation][1] += 15
+        if player_rocket[rocket_animation][1] > HEIGHT + 25: 
+            del player_rocket[rocket_animation]
  
  
 def enemy_bullet_and_player_death_by_bullets():
@@ -376,12 +413,14 @@ def player_draw():
  
 
 def player_bullet_draw():
-    global player_bullet, player_bullet_texture
+    global player_bullet, player_bullet_texture, rocket_texture
     # player bullet
+    scale = 1
     for bullet_draw in range(len(player_bullet)):
-        scale = 1
         arcade.draw_texture_rectangle(player_bullet[bullet_draw][0], player_bullet[bullet_draw][1] + 10, scale * player_bullet_texture.width, scale * player_bullet_texture.height, player_bullet_texture)
-     
+    
+    for rocket_draw in range(len(player_rocket)):
+        arcade.draw_texture_rectangle(player_rocket[rocket_draw][0], player_rocket[rocket_draw][1] + 10, scale * rocket_texture.width, scale * rocket_texture.height, rocket_texture)
 
 def dead_draw():
     global button_color
@@ -404,11 +443,13 @@ def win_page_draw():
 
 
 def play_page():
-    global score, combo
+    global score, combo, player_rocket_timer
     arcade.draw_text("Score: {}".format(score), 0, HEIGHT - 31, arcade.color.WHITE, 30)
     arcade.draw_text("Combo: x{}".format(combo), 0, HEIGHT - 61, arcade.color.WHITE, 30)
     arcade.draw_texture_rectangle(WIDTH - 150, HEIGHT - 50, 50, 50, health_texture)
     arcade.draw_text("Lives", WIDTH - 125, HEIGHT - 70, arcade.color.RED, 30)
+    arcade.draw_texture_rectangle(WIDTH - 150, HEIGHT - 100, 50, 50, rocket_texture)
+    arcade.draw_xywh_rectangle_filled(WIDTH - 130, HEIGHT - 125, player_rocket_timer/5, 50, (0, 255, 0, 100))
 
 
 level_one()
@@ -457,6 +498,7 @@ def on_draw():
     elif len(enemy) == 0 and len(enemy_two) == 0 and page == 8:
         win_page_draw()
  
+
 def on_key_press(key, modifiers):
     global key_pressed, page
     if page >= 3:
@@ -484,10 +526,14 @@ def on_key_release(key, modifiers):
  
  
 def on_mouse_press(x, y, button, modifiers):
-    global player_x, player_y, player_bullet, player_bullet_firerate, page, button_color, score, combo, key_pressed
+    global player_x, player_y, player_bullet, player_bullet_firerate, page, button_color, score, combo, key_pressed, player_rocket, player_rocket_firerate, player_rocket_timer
     if page >= 3 and button == arcade.MOUSE_BUTTON_LEFT:
             player_bullet_firerate = True
-    elif page == 0 and button == arcade.MOUSE_BUTTON_LEFT:
+    if page >= 3 and player_rocket_timer == 0 and button == arcade.MOUSE_BUTTON_RIGHT:
+            player_rocket.append([player_x, player_y])
+            player_rocket_firerate = True
+
+    if page == 0 and button == arcade.MOUSE_BUTTON_LEFT:
             if (x > WIDTH/3 - 30 and x < WIDTH/3 - 30 + 300 and
                     y > HEIGHT/6 and y < HEIGHT/6 + 200):
                 page = 1
@@ -498,7 +544,10 @@ def on_mouse_press(x, y, button, modifiers):
             score = 0
             combo = 0
             page = 3
- 
+            player_rocket = []
+            player_rocket_firerate = False
+            player_rocket_timer = 0
+            
  
 def on_mouse_release(x, y, button, modifiers):
     global player_bullet_firerate, player_bullet_timer, player_bullet_click, page
@@ -521,7 +570,7 @@ def on_mouse_motion(x, y, dx, dy):
  
 def setup():
     global player_texture, player_bullet_texture, enemy_texture, enemy_bullet_texture, enemy_two_texture, enemy_laser_charging_texture, enemy_laser_firing_texture
-    global boss_texture, health_texture
+    global boss_texture, health_texture, rocket_texture
     arcade.open_window(WIDTH, HEIGHT, "HYPERSPACE Python Arcade Edition")
     arcade.set_background_color(arcade.color.BLACK)
     arcade.schedule(on_update, 1/60)
@@ -545,6 +594,7 @@ def setup():
     enemy_laser_firing_texture = arcade.load_texture("images/Laser Firing.png")
     boss_texture = arcade.load_texture("images/boss.png")
     health_texture = arcade.load_texture("images/Health_Pack.png")
+    rocket_texture = arcade.load_texture("images/Rocket.png")
  
     arcade.run()
  
