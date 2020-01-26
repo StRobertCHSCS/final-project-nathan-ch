@@ -1,6 +1,8 @@
 '''
 Note:
-Most functions have no arguements because the main purpose of them in this program is to keep everything more organized
+Most functions have no arguements because the main purpose of them in this program is to keep everything more organized.
+Problems occur because I wanted to avoid exception handling (try: except:) 
+and varibles that are global throughtout the program doesn't need to be used in that particular function
 '''
 import arcade
 import os
@@ -114,7 +116,7 @@ def reset():
     """Resets all variables in the program
     """    
     global enemy, enemy_bullet, enemy_bullet_firerate, enemy_bullet_timer, key_pressed, enemy_healthbar, enemy_color_healthbar, player_x, player_y
-    global player_bullet, player_bullet_firerate, player_bullet_timer, player_bullet_click, enemy_lives, enemy_size_healthbar, enemy_bullet_angle
+    global enemy_lives, enemy_size_healthbar, enemy_bullet_angle
     global random_movement, enemy_lazer_firerate, laser_y, enemy_two, enemy_lazer, enemy_lazer_charging, score
     player_x = WIDTH/2
     player_y = HEIGHT/2
@@ -130,10 +132,6 @@ def reset():
     enemy_size_healthbar = 40
     enemy_healthbar = 40
     enemy_color_healthbar = arcade.color.GREEN
-    player_bullet = []
-    player_bullet_firerate = False
-    player_bullet_timer = -2
-    player_bullet_click = 20
     random_movement = [[0, 0]]
     enemy_lazer_firerate = 50
     laser_y = 0
@@ -599,7 +597,7 @@ level_one()
 def on_update(delta_time):
     global page, enemy
     # Increases the page number when all enemies in the level are dead
-    if len(enemy) == 0 and len(enemy_two) == 0 and page != 8:
+    if len(enemy) == 0 and len(enemy_two) == 0 and page != 8 and not 0 <= page <= 2:
         page += 1
 
     if len(enemy) == 0 and len(enemy_two) == 0 and page == 4:
@@ -713,6 +711,7 @@ def on_mouse_press(x, y, button, modifiers):
                 y > HEIGHT/2 and y < HEIGHT/2 + 100):
             reset()
             level_one()
+            player_bullet = []
             key_pressed = [False] * 4
             score = 0
             combo = 0
