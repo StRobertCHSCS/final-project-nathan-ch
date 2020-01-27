@@ -61,7 +61,7 @@ button_color = arcade.color.BLUE
 button_color_two = button_color
 
 # Different screens
-page = 3
+page = 1
  
 
 def level_one():
