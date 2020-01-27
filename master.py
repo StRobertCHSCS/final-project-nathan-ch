@@ -61,7 +61,7 @@ button_color = arcade.color.BLUE
 button_color_two = button_color
 
 # Different screens
-page = 1
+page = 3
  
 
 def level_one():
@@ -797,7 +797,7 @@ def setup():
     player_bullet_texture = arcade.load_texture("images/Bullet.png")
     enemy_texture = arcade.load_texture("images/Enemy.png")
     enemy_bullet_texture = arcade.load_texture("images/Enemy Bullet.png")
-    enemy_two_texture = arcade.load_texture("images/Beamer.png")
+    enemy_two_texture = arcade.load_texture("images/Laser.png")
     enemy_laser_charging_texture = arcade.load_texture("images/Laser Charging.png")
     enemy_laser_firing_texture = arcade.load_texture("images/Laser Firing.png")
     boss_texture = arcade.load_texture("images/boss.png")
